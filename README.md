@@ -18,4 +18,10 @@ samples, guidance on mobile development, and a full API reference.
 ## Demo Images
 
 ![alt text](demo/LoginPage.PNG)
+![alt text](demo/SignUpPage.PNG)
+![alt text](demo/HomePage.PNG)
+![alt text](demo/ExplorePage.PNG)
+![alt text](demo/ErrorMessage.PNG)
+
+
 
