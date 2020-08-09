@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_login/Screens/HomeScreen/home_screen.dart';
 import 'package:firebase_login/Screens/Login/login_screen.dart';
 import 'package:firebase_login/Screens/SignUp/components/background.dart';
 import 'package:firebase_login/Screens/SignUp/components/or_divider.dart';
@@ -13,7 +14,7 @@ import 'package:firebase_login/constraints.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class Body extends StatefulWidget {
   @override
@@ -87,7 +88,7 @@ class _BodyState extends State<Body> {
                   ),
                   SocialIcon(
                     iconSrc: "assets/icons/google-plus.svg",
-                    press: () {},
+                    press: googleSignIn,
                   ),
                   SocialIcon(
                     iconSrc: "assets/icons/twitter.svg",
@@ -101,6 +102,46 @@ class _BodyState extends State<Body> {
         ),
       ),
     );
+  }
+
+  Future<FirebaseUser> _handleSignIn() async {
+    FirebaseAuth _auth = FirebaseAuth.instance;
+    GoogleSignIn _googleSignIn = GoogleSignIn();
+    FirebaseUser user;
+    bool isSignedIn = await _googleSignIn.isSignedIn();
+
+    if(isSignedIn) {
+      user = await _auth.currentUser();
+      print("here");
+    } else {
+      final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.getCredential(
+          idToken: googleAuth.idToken,
+          accessToken: googleAuth.accessToken
+      );
+      print("there");
+      user = (await _auth.signInWithCredential(credential)).user;
+      await Firestore.instance.collection('users').document(user.uid).setData({
+        'name': user.displayName,
+        'image': user.photoUrl,
+      });
+    }
+    print(user);
+    return user;
+  }
+
+  void googleSignIn() async {
+    try{
+      FirebaseUser user = await _handleSignIn();
+      Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen(user: user,)));
+      AlertBox alertBox = new AlertBox(context, "SignUp Successful!", "Google SignIn Successful", [DialogOkButton()]);
+      alertBox.showAlertDialog();
+    } catch (e) {
+      AlertBox alertBox = new AlertBox(context, "Error!", e.message, [DialogOkButton()]);
+      alertBox.showAlertDialog();
+    }
   }
 
   Future<void> signUp() async {
